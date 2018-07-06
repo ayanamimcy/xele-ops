@@ -1,6 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
+from .aes_encrypt import Prpcrypt
 
 db = SQLAlchemy()
+prpcrypt = Prpcrypt()
 
 
 class TradeTable(db.Model):
@@ -18,6 +20,16 @@ class TradeTable(db.Model):
     def getdict(self):
         return dict(id=self.id, hostname=self.hostname, ip=self.ip, port=self.port, user=self.user, password=self.password)
 
+    def getcolumn(self):
+        return ['id', 'hostname', 'ip', 'port', 'user', 'password']
+
+    def insert(self, data):
+        password = prpcrypt.encrypt(data.get('password'))
+        table = TradeTable(hostname=data.get('hostname'), ip=data.get('ip'), port=data.get('port'), user=data.get('user'), password=password)
+        db.session.add(table)
+        db.session.commit()
+
+
 class MDTable(db.Model):
     __tablename__ = 'md_table'
     id = db.Column(db.Integer, primary_key=True)
@@ -32,6 +44,15 @@ class MDTable(db.Model):
 
     def getdict(self):
         return dict(id=self.id, hostname=self.hostname, ip=self.ip, port=self.port, user=self.user, password=self.password)
+
+    def getcolumn(self):
+        return ['id', 'hostname', 'ip', 'port', 'user', 'password']
+
+    def insert(self, data):
+        password = prpcrypt.encrypt(data.get('password'))
+        table = MDTable(hostname=data.get('hostname'), ip=data.get('ip'), port=data.get('port'), user=data.get('user'), password=password)
+        db.session.add(table)
+        db.session.commit()
 
 
 class TestTable(db.Model):
@@ -49,6 +70,15 @@ class TestTable(db.Model):
 
     def getdict(self):
         return dict(id=self.id, hostname=self.hostname, ip=self.ip, port=self.port, user=self.user, password=self.password, abbreviation=self.abbreviation)
+
+    def getcolumn(self):
+        return ['id', 'hostname', 'ip', 'port', 'user', 'password', 'abbreviation']
+
+    def insert(self, data):
+        password = prpcrypt.encrypt(data.get('password'))
+        table = TestTable(hostname=data.get('hostname'), ip=data.get('ip'), port=data.get('port'), user=data.get('user'), password=password, abbreviation=data.get('abbreviation'))
+        db.session.add(table)
+        db.session.commit()
 
 
 class XeleConfig(db.Model):

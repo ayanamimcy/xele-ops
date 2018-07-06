@@ -18,8 +18,8 @@ def create_app(config_name):
     #flask admin 函数注册
     flask_admin.init_app(app)
     flask_admin.add_view(CustomView(name='Custom'))
-    modellist = [TradeTable, MDTable, TestTable, XeleConfig]
-    for model in modellist:
+    model_list = [TradeTable, MDTable, TestTable, XeleConfig]
+    for model in model_list:
         flask_admin.add_view(CustomModelView(model, db.session))
 
     #注册蓝本到工厂函数

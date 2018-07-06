@@ -19,6 +19,10 @@ class ProductionConfig(Config):
     pass
 
 
+
+    def get(self, name):
+        return self.config[name]['value']
+
 config = {
     'default': DevConfig,
     'production': ProductionConfig
