@@ -1,12 +1,18 @@
 import os
 from app import create_app, db
 from app.models import TradeTable, MDTable, TestTable, XeleConfig
+from app.utils import result_re
 from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
 
 app = create_app('default')
 manager = Manager(app)
 migrate = Migrate(app, db)
+
+
+# 注册jinja2过滤器
+env = app.jinja_env
+env.filters['res_re'] = result_re
 
 
 def make_shell_context():

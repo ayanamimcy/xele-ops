@@ -1,5 +1,6 @@
 import time
 import threading
+import re
 
 from fabric import Connection
 from .aes_encrypt import Prpcrypt
@@ -83,37 +84,41 @@ class Xele(object):
         print(time.clock() - s)
         return results
 
-class Trade(Xele):
+# class Trade(Xele):
+#
+#     def __init__(self):
+#         Xele.__init__(self)
+#
+#     def run_exec(self, host):
+#         s1 = '========================================================\n'
+#         s2 = '                  %s                      \n' % (host[1])
+#         s3 = '========================================================\n'
+#         head = s1 + s2 + s3
+#         command = '/home/xele/xele_trade/bin/debug.py --checktd'
+#         text = self.run_command(host, command)
+#         result = head + text
+#         return result
+#
+#
+# class MD(Xele):
+#
+#     def __init__(self):
+#         Xele.__init__(self)
+#
+#     def run_exec(self, host):
+#         s1 = '========================================================\n'
+#         s2 = '                  %s                      \n' % (host[1])
+#         s3 = '========================================================\n'
+#         head = s1 + s2 + s3
+#         command = "/home/xele/xele_md/bin/debug.py --checkmd | grep -v 'ERROR: find 1 pci devices'"
+#         text = self.run_command(host, command)
+#         result = head + text
+#         return result
 
-    def __init__(self):
-        Xele.__init__(self)
 
-    def run_exec(self, host):
-        s1 = '========================================================\n'
-        s2 = '                  %s                      \n' % (host[1])
-        s3 = '========================================================\n'
-        head = s1 + s2 + s3
-        command = '/home/xele/xele_trade/bin/debug.py --checktd'
-        text = self.run_command(host, command)
-        result = head + text
-        return result
-
-
-class MD(Xele):
-
-    def __init__(self):
-        Xele.__init__(self)
-
-    def run_exec(self, host):
-        s1 = '========================================================\n'
-        s2 = '                  %s                      \n' % (host[1])
-        s3 = '========================================================\n'
-        head = s1 + s2 + s3
-        command = "/home/xele/xele_md/bin/debug.py --checkmd | grep -v 'ERROR: find 1 pci devices'"
-        text = self.run_command(host, command)
-        result = head + text
-        return result
-
+# 添加jinja2过滤器
+def result_re(arg):
+    return re.findall('ERROR', arg)
 
 class Test(Xele):
 

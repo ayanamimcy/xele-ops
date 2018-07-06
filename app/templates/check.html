@@ -3,6 +3,10 @@
 
 {% block page_content %}
 {% for res in result %}
-<p>{{ res | safe }}</p>
+{% if res|res_re %}
+    <p class="text-left"><span class="text-danger">{{ res | safe }}</span></p>
+{% else %}
+    <p class="text-left"><span class="text-success">{{ res | safe }}</span></p>
+{% endif %}
 {% endfor %}
 {% endblock %}%
