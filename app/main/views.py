@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for
 
 from . import main
-from .forms import TradeMD
+from .forms import TradeMD, Command
 from .. import db
 from ..models import TestTable, TradeTable, MDTable, XeleConfig
 from ..utils import Xele
@@ -17,7 +17,6 @@ def trade_hosts(name):
     tablelist = {'trade': TradeTable, 'md': MDTable}
     datas = []
     table = tablelist[name]()
-    print(table)
     column = table.getcolumn()
     try:
         show = table.query.all()
@@ -32,7 +31,6 @@ def trade_hosts(name):
 def hosts_add(name):
     tablelist = {'trade': TradeTable, 'md': MDTable}
     table = tablelist[name]()
-    print(table)
     form = TradeMD()
     if form.validate_on_submit():
         table.insert(form.data)
@@ -43,5 +41,21 @@ def hosts_add(name):
 @main.route('/<name>/check', methods=['GET', 'POST'])
 def check(name):
     table_check = Xele()
-    res = table_check.check_all(name)
+    if name == 'trade':
+        command = '/home/xele/xele_trade/bin/debug.py --checktd'
+    elif name == 'md':
+        command = "/home/xele/xele_md/bin/debug.py --checkmd | grep -v 'ERROR: find 1 pci devices'"
+    res = table_check.run_exec(name, command)
     return render_template('check.html', result=res)
+
+
+@main.route('/<name>/exec', methods=['GET', 'POST'])
+def run_exec(name):
+    table_check = Xele()
+    res = ''
+    form = Command()
+    if form.validate_on_submit():
+        command = form.command.data
+        res = table_check.run_exec(name, command)
+        # return redirect(url_for('.run_exec', name=name))
+    return render_template('exec.html', form=form, result=res)

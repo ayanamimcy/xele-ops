@@ -53,7 +53,7 @@ class Xele(object):
         except Exception as e:
             return e
 
-    def check_all(self, table):
+    def run_exec(self, table, command):
         s = time.clock()
         head = '================={}================='
         heads = []
@@ -61,10 +61,8 @@ class Xele(object):
         results = []
         if table == 'trade':
             init_table = TradeTable()
-            command = '/home/xele/xele_trade/bin/debug.py --checktd'
         elif table == 'md':
             init_table = MDTable()
-            command = "/home/xele/xele_md/bin/debug.py --checkmd | grep -v 'ERROR: find 1 pci devices'"
         hosts = init_table.query.all()
         for host in hosts:
             tmp = host.getdict()

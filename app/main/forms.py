@@ -10,3 +10,8 @@ class TradeMD(FlaskForm):
     user = StringField('user', default='root', validators=[Required()])
     password = PasswordField('password', validators=[Required()])
     submit = SubmitField('submit')
+
+
+class Command(FlaskForm):
+    command = StringField('command', validators=[Required()])
+    submit = SubmitField('run')

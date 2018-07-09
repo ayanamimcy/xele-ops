@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block page_content %}
+{{ wtf.quick_form(form,form_type="inline") }}
+{% if result %}
+{% for res in result %}
+    <p class="text-left"><span class="text-success">{{ res | safe }}</span></p>
+{% endfor %}
+{% endif %}
+{% endblock %}%
