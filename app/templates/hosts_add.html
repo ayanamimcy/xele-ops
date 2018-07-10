@@ -3,4 +3,9 @@
 
 {% block page_content %}
 {{ wtf.quick_form(form) }}
+{% if result %}
+{% for res in result %}
+    <p class="text-left"><span class="text-success">{{ res | safe }}</span></p>
+{% endfor %}
+{% endif %}
 {% endblock %}%

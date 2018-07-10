@@ -62,7 +62,8 @@ class Xele(object):
             self.fabric_xele(host)
             self.ssh_connec.put(source, destination)
             return '%s [%s] put success' % (host['hostname'], source)
-        except Exception:
+        except Exception as e:
+            # return e
             return '[ERROR] %s [%s] put failed' % (host['hostname'], source)
 
     def run_exec(self, table, command):
@@ -94,16 +95,6 @@ class Xele(object):
         print(time.clock() - s)
         return results
 
-    def test_file(self, test_time):
-        date = time.strftime('%Y-%m-%d', time.localtime())
-        hosts = TestTable().query.all()
-        for host in hosts:
-            tmp = host.getdict()
-            if test_time:
-                for i in test_time:
-                    command = "find /home/tradetest -name xelelog.%s_%s*" % (date, i)
-                    source = self.run_command(tmp, command).strip()
-
 
 # 添加jinja2过滤器
 def result_re(arg):
@@ -116,20 +107,69 @@ def path_exist(path):
         os.makedirs(path)
 
 
-# get config_table
+class Test(Xele):
 
-# class Test(Xele):
-#
-#     def __init__(self):
-#         Xele.__init__(self)
-#
-#     def run_exec(self, host):
-#         s1 = time.strftime('%Y-%m-%d_%H', time.localtime())
-#         command = "ls -l /home/tradetest/autotrade/xelelog.* | tail -n 1  | awk '{print $NF}'"
-#         source = self.run_command(host, command).strip()
-#         des_path = self.config.get('path_to_save_trade')
-#         des = des_path + '\\xelelog.%s_%s' % (s1, host[6])
-#         self.get_file(host, source, des)
+    def __init__(self):
+        Xele.__init__(self)
+        self.des_root_path = self.get_config('path_to_save_csv')
+        self.file_path = []
+        self.test_date = []
+        self.file_name = []
+        self.des_host = {
+            'hostname': 'test machine',
+            'ip': self.get_config('remote_ip'),
+            'port': self.get_config('remote_port'),
+            'user': self.get_config('remote_user'),
+            'password': self.get_config('remote_password')
+        }
+        self.des_path = self.get_config('remote_path_to_csv')
+        self.result = []
+
+    def get_config(self, key):
+        table = XeleConfig()
+        search = table.query.filter_by(key=key).first()
+        return search.getdict().get('value')
+
+    def get_test_file(self, test_time, host):
+        date = time.strftime('%Y-%m-%d', time.localtime())
+        tmp = host.getdict()
+        if test_time:
+            for i in test_time:
+                date_file = "%s_%s" % (date, i)
+                command = "find /home/tradetest -name xelelog.%s*" % date_file
+                source = self.run_command(tmp, command).strip()
+                des_path = self.des_root_path + '\\%s' % date_file
+                path_exist(des_path)
+                des = des_path + '\\xelelog.%s_%s' % (date_file, tmp['abbreviation'])
+                self.file_path.append(des)
+                self.test_date.append(date_file)
+                self.file_name.append('xelelog.%s_%s' % (date_file, tmp['abbreviation']))
+                res = self.get_file(tmp, source, des)
+                self.result.append(res)
+
+    def put_test_file(self):
+        for i in range(len(self.test_date)):
+            source = self.file_path[i]
+            des = self.des_path + 'xelelog.%s' % self.test_date[i] + '/' + self.file_name[i]
+            res = self.put_file(self.des_host, source, des)
+            self.result.append(res)
+
+    def test_file(self, test_date):
+        s = time.clock()
+        hosts = TestTable().query.all()
+        thread = []
+        for host in hosts:
+            t = Mythread(self.get_test_file, (test_date, host), self.get_test_file.__name__)
+            thread.append(t)
+        for t in thread:
+            t.start()
+            t.join()
+        self.put_test_file()
+        self.run_command(self.des_host, '/home/tradetest/compare.sh')
+        print(time.clock() - s)
+
+    def getRst(self):
+        return self.result
 
 
 class Updatelicence(Xele):

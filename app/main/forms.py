@@ -42,3 +42,10 @@ class FileTime(FlaskForm):
 class Command(FlaskForm):
     command = StringField('command', validators=[Required()])
     submit = SubmitField('run')
+
+
+class SetConfig(FlaskForm):
+    key = StringField('key', validators=[Required()])
+    value = StringField('value', validators=[Required()])
+    description = StringField('description', validators=[Required()])
+    submit = SubmitField('submit')

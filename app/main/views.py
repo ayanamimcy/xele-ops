@@ -2,10 +2,9 @@ import re
 from flask import render_template, redirect, url_for, flash
 
 from . import main
-from .forms import TradeMD, Command, TestAdd, FileTime
-from .. import db
+from .forms import TradeMD, Command, TestAdd, FileTime, SetConfig
 from ..models import TestTable, TradeTable, MDTable, XeleConfig
-from ..utils import Xele
+from ..utils import Xele, Test
 
 
 @main.route('/')
@@ -39,7 +38,7 @@ def hosts_add(name):
     if form.validate_on_submit():
         table.insert(form.data)
         return redirect(url_for('.trade_hosts', name=name))
-    return render_template('hosts_add.html', form=form)
+    return render_template('hosts_add.html', form=form, result=[])
 
 
 @main.route('/<name>/check', methods=['GET', 'POST'])
@@ -69,10 +68,29 @@ def run_exec(name):
 
 @main.route('/test/get', methods=['GET', 'POST'])
 def get_file():
-    xele_class = Xele()
+    xele_class = Test()
     form = FileTime()
+    res = []
     if form.validate_on_submit():
         result = form.getRst(form.data)
-        print(result)
         xele_class.test_file(result)
-    return render_template('hosts_add.html', form=form)
+        res = xele_class.getRst()
+    return render_template('hosts_add.html', form=form, result=res)
+
+
+@main.route('/config', methods=['GET', 'POST'])
+def config_set():
+    table = XeleConfig()
+    form = SetConfig()
+    column = table.getcolumn()
+    datas = []
+    if form.validate_on_submit():
+        table.insert(form.data)
+        return redirect(url_for('.config_set'))
+    try:
+        show = table.query.all()
+        for list in show:
+            datas.append(list.getdict())
+    except:
+        datas = {'1': '1'}
+    return render_template('config.html', form=form, column=column, datas=datas)

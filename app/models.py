@@ -1,3 +1,5 @@
+import re
+
 from flask_sqlalchemy import SQLAlchemy
 from .aes_encrypt import Prpcrypt
 
@@ -93,3 +95,15 @@ class XeleConfig(db.Model):
 
     def getdict(self):
         return dict(id=self.id, key=self.key, value=self.value, description=self.description)
+
+    def getcolumn(self):
+        return ['id', 'key', 'value', 'description']
+
+    def insert(self, data):
+        if re.findall('password', data.get('key')):
+            value = prpcrypt.encrypt(data.get('value'))
+            table = XeleConfig(key=data.get('key'), value=value, description=data.get('description'))
+        else:
+            table = XeleConfig(key=data.get('key'), value=data.get('value'), description=data.get('description'))
+        db.session.add(table)
+        db.session.commit()
