@@ -1,7 +1,8 @@
-from flask import render_template, redirect, url_for
+import re
+from flask import render_template, redirect, url_for, flash
 
 from . import main
-from .forms import TradeMD, Command
+from .forms import TradeMD, Command, TestAdd, FileTime
 from .. import db
 from ..models import TestTable, TradeTable, MDTable, XeleConfig
 from ..utils import Xele
@@ -14,7 +15,7 @@ def index():
 
 @main.route('/<name>/hosts', methods=['GET', 'POST'])
 def trade_hosts(name):
-    tablelist = {'trade': TradeTable, 'md': MDTable}
+    tablelist = {'trade': TradeTable, 'md': MDTable, 'test': TestTable}
     datas = []
     table = tablelist[name]()
     column = table.getcolumn()
@@ -29,9 +30,12 @@ def trade_hosts(name):
 
 @main.route('/<name>/hosts/add', methods=['GET', 'POST'])
 def hosts_add(name):
-    tablelist = {'trade': TradeTable, 'md': MDTable}
+    tablelist = {'trade': TradeTable, 'md': MDTable, 'test': TestTable}
     table = tablelist[name]()
-    form = TradeMD()
+    if name == 'test':
+        form = TestAdd()
+    else:
+        form = TradeMD()
     if form.validate_on_submit():
         table.insert(form.data)
         return redirect(url_for('.trade_hosts', name=name))
@@ -56,6 +60,19 @@ def run_exec(name):
     form = Command()
     if form.validate_on_submit():
         command = form.command.data
-        res = table_check.run_exec(name, command)
-        # return redirect(url_for('.run_exec', name=name))
+        if re.findall('^rm', command):
+            flash('%s is dangerous' % command)
+        else:
+            res = table_check.run_exec(name, command)
     return render_template('exec.html', form=form, result=res)
+
+
+@main.route('/test/get', methods=['GET', 'POST'])
+def get_file():
+    xele_class = Xele()
+    form = FileTime()
+    if form.validate_on_submit():
+        result = form.getRst(form.data)
+        print(result)
+        xele_class.test_file(result)
+    return render_template('hosts_add.html', form=form)

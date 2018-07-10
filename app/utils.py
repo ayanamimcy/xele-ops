@@ -1,6 +1,7 @@
 import time
 import threading
 import re
+import os
 
 from fabric import Connection
 from .aes_encrypt import Prpcrypt
@@ -20,7 +21,7 @@ class Mythread(threading.Thread):
         try:
             return self.res
         except Exception as e:
-            return e
+            return str(e)
 
 
 class Xele(object):
@@ -38,20 +39,31 @@ class Xele(object):
             self.ssh_connec = Connection(host=host, port=port, user=user, connect_kwargs={'password': password})
             return self.ssh_connec
         except Exception as e:
-            return e
+            return str(e)
 
     def run_command(self, host, command):
-        self.fabric_xele(host)
-        result = self.ssh_connec.run(command, hide=True).stdout
-        return result
+        try:
+            self.fabric_xele(host)
+            result = self.ssh_connec.run(command, hide=True).stdout
+            return result
+        except Exception as e:
+            return str(e)
 
     def get_file(self, host, source, destination):
-        self.fabric_xele(host)
         try:
+            self.fabric_xele(host)
             self.ssh_connec.get(source, destination)
             return '%s [%s] get success' % (host['hostname'], source)
-        except Exception as e:
-            return e
+        except Exception:
+            return '[ERROR] %s [%s] get failed' % (host['hostname'], source)
+
+    def put_file(self, host, source, destination):
+        try:
+            self.fabric_xele(host)
+            self.ssh_connec.put(source, destination)
+            return '%s [%s] put success' % (host['hostname'], source)
+        except Exception:
+            return '[ERROR] %s [%s] put failed' % (host['hostname'], source)
 
     def run_exec(self, table, command):
         s = time.clock()
@@ -82,54 +94,42 @@ class Xele(object):
         print(time.clock() - s)
         return results
 
-# class Trade(Xele):
-#
-#     def __init__(self):
-#         Xele.__init__(self)
-#
-#     def run_exec(self, host):
-#         s1 = '========================================================\n'
-#         s2 = '                  %s                      \n' % (host[1])
-#         s3 = '========================================================\n'
-#         head = s1 + s2 + s3
-#         command = '/home/xele/xele_trade/bin/debug.py --checktd'
-#         text = self.run_command(host, command)
-#         result = head + text
-#         return result
-#
-#
-# class MD(Xele):
-#
-#     def __init__(self):
-#         Xele.__init__(self)
-#
-#     def run_exec(self, host):
-#         s1 = '========================================================\n'
-#         s2 = '                  %s                      \n' % (host[1])
-#         s3 = '========================================================\n'
-#         head = s1 + s2 + s3
-#         command = "/home/xele/xele_md/bin/debug.py --checkmd | grep -v 'ERROR: find 1 pci devices'"
-#         text = self.run_command(host, command)
-#         result = head + text
-#         return result
+    def test_file(self, test_time):
+        date = time.strftime('%Y-%m-%d', time.localtime())
+        hosts = TestTable().query.all()
+        for host in hosts:
+            tmp = host.getdict()
+            if test_time:
+                for i in test_time:
+                    command = "find /home/tradetest -name xelelog.%s_%s*" % (date, i)
+                    source = self.run_command(tmp, command).strip()
 
 
 # 添加jinja2过滤器
 def result_re(arg):
     return re.findall('ERROR', arg)
 
-class Test(Xele):
 
-    def __init__(self):
-        Xele.__init__(self)
+# create path
+def path_exist(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
-    def run_exec(self, host):
-        s1 = time.strftime('%Y-%m-%d_%H', time.localtime())
-        command = "ls -l /home/tradetest/autotrade/xelelog.* | tail -n 1  | awk '{print $NF}'"
-        source = self.run_command(host, command).strip()
-        des_path = self.config.get('path_to_save_trade')
-        des = des_path + '\\xelelog.%s_%s' % (s1, host[6])
-        self.get_file(host, source, des)
+
+# get config_table
+
+# class Test(Xele):
+#
+#     def __init__(self):
+#         Xele.__init__(self)
+#
+#     def run_exec(self, host):
+#         s1 = time.strftime('%Y-%m-%d_%H', time.localtime())
+#         command = "ls -l /home/tradetest/autotrade/xelelog.* | tail -n 1  | awk '{print $NF}'"
+#         source = self.run_command(host, command).strip()
+#         des_path = self.config.get('path_to_save_trade')
+#         des = des_path + '\\xelelog.%s_%s' % (s1, host[6])
+#         self.get_file(host, source, des)
 
 
 class Updatelicence(Xele):
